@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body{margin:10px;}
+    #pbar {
+      border-style: double;
+      padding:10px;
+    }
+
+    #foodlist-container {
+      border-color: black;
+    }
+
+    #progress-container {
+      width: 300px;
+      height: 20px;
+      background-color: #e87676;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: green;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pbar">
+    <p>Protein intaken :</p>
+    <p id="pcounter"></p>
+    <div id="progress-container">
+      <div id="progress-fill"></div> 
+    </div> 
+     <p id="progress-fill-writing"></p>
+    <button id="p-reset" onclick="resetP()">Reset Protein</button>
+  </div>
+  <input type="text" id="p-food-input">
+  <button id="p-add-button" onclick="addp()">ADD</button>
+  <div id="foodlist-container"></div>
+  <script>
+    let savedp = localStorage.getItem("protein")
+    let pcountNumerator = savedp ? parseFloat(savedp) : 0;
+    let pcounterDenominator = 130;
+
+    function updateDisplay() {
+      document.getElementById("pcounter").innerText = pcountNumerator.toFixed(2) + "/" + pcounterDenominator + "g";
+      let percentage = (pcountNumerator / pcounterDenominator) * 100;
+      if (percentage > 100) { percentage = 100; }
+      document.getElementById("progress-fill").style.width = percentage + "%";
+      document.getElementById("progress-fill-writing").innerHTML = percentage.toFixed(1) + "%";
+    }
+    updateDisplay();
+
+    let foodDatabase = {
+      banana: 1.30,
+      egg: 6.00,
+      chicken: 24.00,
+      milk: 3.40
+    };
+
+    function resetP() {
+      document.getElementById("p-food-input").value = "";
+      localStorage.removeItem("protein");
+      pcountNumerator = 0;
+      updateDisplay();
+
+    }
+
+    function addp() {
+      let food = document.getElementById("p-food-input").value.trim().toLowerCase();
+      if (food in foodDatabase) {
+        pcountNumerator += foodDatabase[food];
+        localStorage.setItem("protein", pcountNumerator);
+      }
+      else {
+        alert("food not found in database");
+        return;
+      }
+      updateDisplay();
+      document.getElementById("p-food-input").value = "";
+
+    }
+  </script>
+</body>
+
+</html>
