@@ -21,7 +21,6 @@
 
   <script>
     let foodList = [];
-    let foodQ = parseFloat(getElementById("p-food-input-amount").value);
     let savedp = localStorage.getItem("protein");
     let pcountNumerator = savedp ? parseFloat(savedp) : 0;
     let pcounterDenominator = 130;
@@ -32,6 +31,7 @@
       if (percentage > 100) { percentage = 100; }
       document.getElementById("progress-fill").style.width = percentage + "%";
       document.getElementById("progress-fill-writing").innerHTML = percentage.toFixed(1) + "%";
+      
     }
     updateDisplay();
 
@@ -52,11 +52,13 @@
 
     function addp() {
       let food = document.getElementById("p-food-input").value.trim().toLowerCase();
+      let foodQ = parseFloat(document.getElementById("p-food-input-amount").value);
+      if (isNaN(foodQ)){foodQ = 1;}
       if (food in foodDatabase) {
         let pValue = foodDatabase[food];
         let foodItem = { name: food, protein: pValue ,count: foodQ };
         foodList.push(foodItem);
-        pcountNumerator += foodDatabase[food];
+        pcountNumerator += ( foodDatabase[food] * foodQ );
         localStorage.setItem("protein", pcountNumerator);
       }
       else {
@@ -75,7 +77,7 @@
       for(let i = 0; i < foodList.length; i++ ){
         let item = foodList[i];
         let div =document.createElement("div");
-        div.innerText = item.name + " - " + item.protein + "g" ;
+        div.innerText = i+1 + ") " + item.name + " - " + item.protein + "g " + " - " + "  count: " + item.count;
         container.appendChild(div); 
       }
     }
