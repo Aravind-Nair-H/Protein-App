@@ -1,35 +1,8 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <style>
-    body{margin:10px;}
-    #pbar {
-      border-style: double;
-      padding:10px;
-    }
-
-    #foodlist-container {
-      border-color: black;
-    }
-
-    #progress-container {
-      width: 300px;
-      height: 20px;
-      background-color: #e87676;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-      margin-left: 10px;
-    }
-
-    #progress-fill {
-      height: 100%;
-      width: 0%;
-      background-color: green;
-      transition: width 0.3s ease;
-    }
-  </style>
+<head>  
+  <link rel="stylesheet" href="main.css">
 </head>
 
 <body>
@@ -42,11 +15,14 @@
      <p id="progress-fill-writing"></p>
     <button id="p-reset" onclick="resetP()">Reset Protein</button>
   </div>
-  <input type="text" id="p-food-input">
+  <input type="text" id="p-food-input"><input type="number" id="p-food-input-amount" max="50" min="1">
   <button id="p-add-button" onclick="addp()">ADD</button>
   <div id="foodlist-container"></div>
+
   <script>
-    let savedp = localStorage.getItem("protein")
+    let foodList = [];
+    let foodQ = parseFloat(getElementById("p-food-input-amount").value);
+    let savedp = localStorage.getItem("protein");
     let pcountNumerator = savedp ? parseFloat(savedp) : 0;
     let pcounterDenominator = 130;
 
@@ -71,12 +47,15 @@
       localStorage.removeItem("protein");
       pcountNumerator = 0;
       updateDisplay();
-
+      document.getElementById("foodlist-container").innerHTML ="";
     }
 
     function addp() {
       let food = document.getElementById("p-food-input").value.trim().toLowerCase();
       if (food in foodDatabase) {
+        let pValue = foodDatabase[food];
+        let foodItem = { name: food, protein: pValue ,count: foodQ };
+        foodList.push(foodItem);
         pcountNumerator += foodDatabase[food];
         localStorage.setItem("protein", pcountNumerator);
       }
@@ -86,8 +65,21 @@
       }
       updateDisplay();
       document.getElementById("p-food-input").value = "";
-
+      document.getElementById("p-food-input-amount").value = "";
+      renderFoodlist();
     }
+
+    function renderFoodlist(){
+      let container = document.getElementById("foodlist-container");
+      container.innerHTML = "";
+      for(let i = 0; i < foodList.length; i++ ){
+        let item = foodList[i];
+        let div =document.createElement("div");
+        div.innerText = item.name + " - " + item.protein + "g" ;
+        container.appendChild(div); 
+      }
+    }
+    
   </script>
 </body>
 

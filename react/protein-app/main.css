@@ -1,0 +1,32 @@
+body{margin:10px;}
+    #pbar {
+      border-style: double;
+      padding:10px;
+    }
+
+    #foodlist-container {
+      border-color: black;
+    }
+
+    #progress-container {
+      width: 300px;
+      height: 20px;
+      background-color: #e87676;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: green;
+      transition: width 0.3s ease;
+    }
+    #foodlist-container{
+      background-color: rgb(189, 171, 251);
+    }
+    #p-food-input-amount{
+      width: 25px;
+    }
