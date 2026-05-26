@@ -15,72 +15,134 @@
      <p id="progress-fill-writing"></p>
     <button id="p-reset" onclick="resetP()">Reset Protein</button>
   </div>
+  <div id="food-search-container">
   <input type="text" id="p-food-input"><input type="number" id="p-food-input-amount" max="50" min="1">
   <button id="p-add-button" onclick="addp()">ADD</button>
+  </div>
+  <div id="suggestions"></div>
   <div id="foodlist-container"></div>
 
   <script>
-    let foodList = [];
-    let savedp = localStorage.getItem("protein");
-    let pcountNumerator = savedp ? parseFloat(savedp) : 0;
+    // The Standard Food Database
+    let foodDatabase ={};
+    let savedFoodList = localStorage.getItem("foodList");
+    let foodList = savedFoodList ? JSON.parse(savedFoodList) : [];
+    let pcountNumerator = 0;
+    for(let i = 0; i < foodList.length; i++){
+    pcountNumerator += foodList[i].protein;
+    }
     let pcounterDenominator = 130;
 
+    
+    
+   
+    function updatePcountNumerator(){
+      pcountNumerator = 0;
+      for(let i = 0; i < foodList.length; i++){
+        pcountNumerator += foodList[i].protein;
+      }
+    }
+
     function updateDisplay() {
+      updatePcountNumerator()
+      //SETTING PROTEIN BAR UI
       document.getElementById("pcounter").innerText = pcountNumerator.toFixed(2) + "/" + pcounterDenominator + "g";
       let percentage = (pcountNumerator / pcounterDenominator) * 100;
       if (percentage > 100) { percentage = 100; }
       document.getElementById("progress-fill").style.width = percentage + "%";
       document.getElementById("progress-fill-writing").innerHTML = percentage.toFixed(1) + "%";
-      
-    }
-    updateDisplay();
-
-    let foodDatabase = {
-      banana: 1.30,
-      egg: 6.00,
-      chicken: 24.00,
-      milk: 3.40
-    };
-
-    function resetP() {
-      document.getElementById("p-food-input").value = "";
-      localStorage.removeItem("protein");
-      pcountNumerator = 0;
-      updateDisplay();
-      document.getElementById("foodlist-container").innerHTML ="";
-    }
-
-    function addp() {
-      let food = document.getElementById("p-food-input").value.trim().toLowerCase();
-      let foodQ = parseFloat(document.getElementById("p-food-input-amount").value);
-      if (isNaN(foodQ)){foodQ = 1;}
-      if (food in foodDatabase) {
-        let pValue = foodDatabase[food];
-        let foodItem = { name: food, protein: pValue ,count: foodQ };
-        foodList.push(foodItem);
-        pcountNumerator += ( foodDatabase[food] * foodQ );
-        localStorage.setItem("protein", pcountNumerator);
-      }
-      else {
-        alert("food not found in database");
-        return;
-      }
-      updateDisplay();
-      document.getElementById("p-food-input").value = "";
-      document.getElementById("p-food-input-amount").value = "";
-      renderFoodlist();
-    }
-
+     //SETTING FOODLIST UI
+     renderFoodlist();
+     }
+    
+    // 
     function renderFoodlist(){
       let container = document.getElementById("foodlist-container");
       container.innerHTML = "";
       for(let i = 0; i < foodList.length; i++ ){
         let item = foodList[i];
         let div =document.createElement("div");
-        div.innerText = i+1 + ") " + item.name + " - " + item.protein + "g " + " - " + "  count: " + item.count;
-        container.appendChild(div); 
+        div.classList.add("food-item");
+        let bttn = document.createElement("button");
+        bttn.innerText = "X";
+        bttn.classList.add("delete-btn");
+        bttn.onclick = function(){
+          foodList.splice(i,1);
+          localStorage.setItem("foodList", JSON.stringify(foodList));
+          updateDisplay();
+        }
+        div.innerHTML = i+1 +") "+ item.name +" - "+ item.protein +"g "+"- "+ "count: "+ item.count +" ";
+        div.appendChild(bttn);
+        container.appendChild(div);
+        
       }
     }
+    
+    function addp() {
+      let food = document.getElementById("p-food-input").value.trim().toLowerCase();
+      let foodQ = parseFloat(document.getElementById("p-food-input-amount").value);
+      if (isNaN(foodQ)){foodQ = 1;}
+      if (food in foodDatabase) {
+        let pValue = foodDatabase[food].protein * foodQ;
+        //INITIALIZING OBJECT foodItem AND PUSHING IT TO foodList ARRAY
+        let foodItem = { name: food, protein: pValue ,count: foodQ };
+        foodList.push(foodItem);
+        pcountNumerator += ( pValue );
+        //STORING foodList IN LOCAL STORAGE        
+        localStorage.setItem("foodList",JSON.stringify(foodList) );
+      }
+      else {
+        alert("food not found in database");console.log("here");
+        return;
+      }
+      updateDisplay();
+      document.getElementById("p-food-input").value = "";
+      document.getElementById("p-food-input-amount").value = "";
+      
+    }
+
+    function resetP() {
+      document.getElementById("p-food-input").value = "";
+      localStorage.removeItem("foodList");
+      foodList=[];
+      updateDisplay();
+      
+    }
+
+    
+    function showSuggestions(){
+      let input = document.getElementById("p-food-input").value.toLowerCase();
+      let matches = Object.keys(foodDatabase).filter(food =>food.startsWith(input));
+      let container = document.getElementById("suggestions");
+      // Stop if input empty
+      if(input===""){
+          container.innerHTML="";
+          return;
+      }
+      
+      container.innerHTML="";
+      for(let i=0 ;i< matches.length;i++){
+        let div =document.createElement("div");
+        div.innerText = matches[i];
+        container.appendChild(div);
+      
+      div.onclick = function(){
+        document.getElementById("p-food-input").value = matches[i];
+        container.innerHTML = "";
+      }
+    } 
+    }
+
+    //INITIAL APP STARTUP
+    fetch("foods.json") 
+      .then(response => response.json())   //raw json text to Javascript Object
+      .then(data => {                     //after data loads run
+          foodDatabase = data;
+
+          updateDisplay();
+
+      } );
+    document.getElementById("p-food-input").addEventListener( "input" , showSuggestions);
     
   </script>
 </body>
