@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>  
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+  <div id="pbar">
+    <p>Protein intaken :</p>
+    <p id="pcounter"></p>
+    <div id="progress-container">
+      <div id="progress-fill"></div> 
+    </div> 
+     <p id="progress-fill-writing"></p>
+    <button id="p-reset" onclick="resetP()">Reset Protein</button> 
+    <button id="save-history" onclick="saveHistory();">Save</button>
+  </div>
+  <div id="food-search-container">
+  <input type="text" id="p-food-input"><input type="number" id="p-food-input-amount" max="50" min="1">
+  <button id="p-add-button" onclick="addp()">ADD</button>
+  </div>
+  <div id="suggestions"></div>
+  <div id="foodlist-container"></div>
+  
+  <!-- <script src="app.js"></script> -->
+
+  <script>
+    // The Standard Food Database
+    console.log("going to learn basic SQL");
+    let foodDatabase ={};
+    let savedFoodList = localStorage.getItem("foodList");
+    let foodList = savedFoodList ? JSON.parse(savedFoodList) : [];
+    let History = localStorage.getItem("History") ? JSON.parse(localStorage.getItem("History")) : [];
+    let pcountNumerator = 0;
+    for(let i = 0; i < foodList.length; i++){
+    pcountNumerator += foodList[i].protein;
+    }
+    let pcounterDenominator = 130;
+    editIndex = -1;
+
+    
+    
+   
+    function updatePcountNumerator(){
+      pcountNumerator = 0;
+      for(let i = 0; i < foodList.length; i++){
+        pcountNumerator += foodList[i].protein;
+      }
+    }
+
+    function updateDisplay() {
+      updatePcountNumerator()
+      //SETTING PROTEIN BAR UI
+      document.getElementById("pcounter").innerText = pcountNumerator.toFixed(2) + "/" + pcounterDenominator + "g";
+      let percentage = (pcountNumerator / pcounterDenominator) * 100;
+      if (percentage > 100) { percentage = 100; }
+      document.getElementById("progress-fill").style.width = percentage + "%";
+      document.getElementById("progress-fill-writing").innerHTML = percentage.toFixed(1) + "%";
+     //SETTING FOODLIST UI
+     renderFoodlist();
+     }
+
+    function saveHistory(){
+      let today = new Date().toISOString().split("T")[0];
+      let todaysHistory = {
+        date: today,
+        food: JSON.parse(JSON.stringify(foodList))  
+    };
+    let dupe = false;let dupeno = -1;
+    for(i=0;i<History.length;i++){
+        if(History[i].date === today){
+          dupe = true;dupeno = i;
+        }
+      }
+    if (dupe){
+      History[dupeno]= todaysHistory;
+    }
+    else{History.push(todaysHistory);}
+    localStorage.setItem("History",JSON.stringify(History) );  
+    } 
+    
+    // 
+    function renderFoodlist(){
+      let container = document.getElementById("foodlist-container");
+      container.innerHTML = "";
+      for(let i = 0; i < foodList.length; i++ ){
+        let item = foodList[i];
+        let div =document.createElement("div");
+        div.classList.add("food-item");
+        let editBttn = document.createElement("button");
+        editBttn.innerText = "edit";editBttn.classList.add("edit-bttn");
+        editBttn.onclick = function(){ 
+          editFood(i);         
+        }
+        let deleteBttn = document.createElement("button");
+        deleteBttn.innerText = "X";
+        deleteBttn.classList.add("delete-bttn");
+        deleteBttn.onclick = function(){
+          foodList.splice(i,1);
+          localStorage.setItem("foodList", JSON.stringify(foodList));
+          updateDisplay();
+        }
+        div.innerHTML = item.time +" : "+ item.name +" - "+ item.protein +"g "+"- "+ "count: "+ item.count +" ";
+        div.appendChild(editBttn); div.appendChild(deleteBttn);
+        container.appendChild(div);
+        
+      }
+    }
+    
+    async function addp() {
+      let food = document.getElementById("p-food-input").value.trim().toLowerCase();
+      let foodQ = parseFloat(document.getElementById("p-food-input-amount").value);
+      if (isNaN(foodQ)){foodQ = 1;}
+      if (food in foodDatabase) {
+        let pValue = foodDatabase[food].protein * foodQ;
+        //INITIALIZING OBJECT foodItem AND PUSHING IT TO foodList ARRAY
+        let foodItem = { time: new Date().toLocaleTimeString(), name: food, protein: pValue ,count: foodQ };
+        if(editIndex === -1 ){
+          foodList.push(foodItem);
+        }else{
+          foodItem.time = foodList[editIndex].time;
+          foodList[editIndex] = foodItem;
+          editIndex = -1;
+        }
+        pcountNumerator += ( pValue );
+        //STORING foodList IN LOCAL STORAGE        
+        localStorage.setItem("foodList",JSON.stringify(foodList) );
+      }
+      else {
+        alert("food not found in database");console.log("here");
+        return;
+      }
+      updateDisplay();
+      document.getElementById("p-food-input").value = "";
+      document.getElementById("p-food-input-amount").value = "";
+      document.getElementById("suggestions").innerHTML="";
+    }
+    async function getProtein() {
+      
+    }
+    function resetP() {
+      document.getElementById("p-food-input").value = "";
+      localStorage.removeItem("foodList");
+      foodList=[];
+      updateDisplay();
+      
+    }
+
+    
+    function showSuggestions(){
+      let input = document.getElementById("p-food-input").value.toLowerCase();
+      let matches = Object.keys(foodDatabase).filter(food =>food.includes(input));
+      let container = document.getElementById("suggestions");
+      // Stop if input empty
+      if(input===""){
+          container.innerHTML="";
+          return;
+      }
+      //      
+      container.innerHTML="";
+      for(let i=0 ;i< matches.length;i++){
+        let div =document.createElement("div");
+        div.innerText = matches[i];
+        container.appendChild(div);
+      //
+      div.onclick = function(){
+        document.getElementById("p-food-input").value = matches[i];
+        container.innerHTML = "";
+      }
+    } 
+    }
+
+    function editFood(i){
+        document.getElementById("p-food-input").value = foodList[i].name;
+        document.getElementById("p-food-input-amount").value = foodList[i].count;
+        editIndex = i;
+      }
+
+    //INITIAL APP STARTUP
+    fetch("foods.json") 
+      .then(response => response.json())   //raw json text to Javascript Object
+      .then(data => {                     //after data loads run
+          foodDatabase = data;
+
+          updateDisplay();
+
+      } );
+    document.getElementById("p-food-input").addEventListener( "input" , showSuggestions);
+    
+  </script>
+</body>
+
+</html>

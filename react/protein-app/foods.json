@@ -1,0 +1,17 @@
+{
+  "banana": {
+    "protein": 1.3
+  },
+
+  "egg": {
+    "protein": 6
+  },
+
+  "milk": {
+    "protein": 3.4
+  },
+
+  "chicken": {
+    "protein":24
+  }
+}
