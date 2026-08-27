@@ -27,6 +27,7 @@
 
   <script>
     // The Standard Food Database
+    console.log("going to learn basic SQL");
     let foodDatabase ={};
     let savedFoodList = localStorage.getItem("foodList");
     let foodList = savedFoodList ? JSON.parse(savedFoodList) : [];
@@ -107,7 +108,7 @@
       }
     }
     
-    function addp() {
+    async function addp() {
       let food = document.getElementById("p-food-input").value.trim().toLowerCase();
       let foodQ = parseFloat(document.getElementById("p-food-input-amount").value);
       if (isNaN(foodQ)){foodQ = 1;}
@@ -135,7 +136,9 @@
       document.getElementById("p-food-input-amount").value = "";
       document.getElementById("suggestions").innerHTML="";
     }
-
+    async function getProtein() {
+      
+    }
     function resetP() {
       document.getElementById("p-food-input").value = "";
       localStorage.removeItem("foodList");
